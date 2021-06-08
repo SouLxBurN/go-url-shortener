@@ -8,14 +8,10 @@ import (
 	"log"
 	"time"
 	"url-shortener/client"
+	"url-shortener/config"
 	"url-shortener/model"
 
 	"go.mongodb.org/mongo-driver/bson"
-)
-
-const (
-	DATABASE   = "urlShortener"
-	COLLECTION = "shortUrls"
 )
 
 // CreateShortUrl
@@ -26,7 +22,8 @@ func CreateShortUrl(sURL *model.ShortURL) (interface{}, error) {
 	if err != nil {
 		log.Fatal("Failed to connect to MongoDB")
 	}
-	shortUrls := mClient.Database(DATABASE).Collection(COLLECTION)
+	mongoConfig := config.GetMongoConfig()
+	shortUrls := mClient.Database(mongoConfig.Database).Collection(mongoConfig.Collection)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
@@ -66,7 +63,8 @@ func GetShortUrl(hash string) (string, error) {
 		log.Fatal("Failed to connect to MongoDB")
 	}
 
-	shortUrls := mClient.Database(DATABASE).Collection(COLLECTION)
+	mongoConfig := config.GetMongoConfig()
+	shortUrls := mClient.Database(mongoConfig.Database).Collection(mongoConfig.Collection)
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()

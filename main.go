@@ -8,8 +8,6 @@ import (
 
 func main() {
 	app := fiber.New()
-
 	route.Configure(app)
-
 	app.Listen(":3000")
 }
