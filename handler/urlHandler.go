@@ -1,7 +1,8 @@
 package handler
 
 import (
-	"log"
+	"fmt"
+	"url-shortener/config"
 	"url-shortener/model"
 	"url-shortener/service"
 
@@ -16,26 +17,27 @@ func CreateHandler(c *fiber.Ctx) error {
 		return err
 	}
 
-	urlHash, err := service.CreateShortUrl(sURL)
+	err := service.CreateShortUrl(sURL)
 	if err != nil {
 		return err
 	}
 
+	shortUrl := fmt.Sprintf("%s/%s", config.GetConfig().Domain, sURL.Hash)
 	// Also formulate a damn response
+	// Use domain config to return full url
 	return c.JSON(fiber.Map{
-		"urlHash": urlHash,
+		"shortUrl": shortUrl,
 	})
 }
 
 // ResolveHandler Resolves the hash and redirects to the url.
 func ResolveHandler(c *fiber.Ctx) error {
 	urlHash := c.Params("urlHash")
-	log.Println(urlHash)
 
-	redirectUrl, err := service.GetShortUrl(urlHash)
+	shortURL, err := service.GetShortUrl(urlHash)
 	if err != nil {
 		return err
 	}
 
-	return c.Redirect(redirectUrl)
+	return c.Redirect(shortURL.URL)
 }

@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"hash/crc32"
 	"log"
@@ -17,7 +16,7 @@ import (
 // CreateShortUrl
 // Creates a short url in the mongo database
 // and returns the object Id
-func CreateShortUrl(sURL *model.ShortURL) (interface{}, error) {
+func CreateShortUrl(sURL *model.ShortURL) error {
 	mClient, err := client.GetMongoClient()
 	if err != nil {
 		log.Fatal("Failed to connect to MongoDB")
@@ -28,22 +27,19 @@ func CreateShortUrl(sURL *model.ShortURL) (interface{}, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	urlHash := createUrlHash(sURL.URL)
+	sURL.Hash = createUrlHash(sURL.URL)
 
-	url, err := GetShortUrl(urlHash)
-	if url != "" && err == nil {
-		return nil, errors.New("Url Already Exists")
+	// Check if hash already exists
+	shortUrl, err := GetShortUrl(sURL.Hash)
+	if shortUrl != nil && err == nil {
+		return nil
 	}
 
-	_, err = shortUrls.InsertOne(ctx,
-		bson.D{
-			{Key: "hash", Value: urlHash},
-			{Key: "url", Value: sURL.URL},
-		})
+	_, err = shortUrls.InsertOne(ctx, sURL)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return urlHash, nil
+	return nil
 }
 
 // createUrlHash Hashes the given string URL and returns a hexidecimal
@@ -57,7 +53,7 @@ func createUrlHash(URL string) string {
 // GetShortUrl
 // Return the original url associated with the hash
 // for redirect purposes.
-func GetShortUrl(hash string) (string, error) {
+func GetShortUrl(hash string) (*model.ShortURL, error) {
 	mClient, err := client.GetMongoClient()
 	if err != nil {
 		log.Fatal("Failed to connect to MongoDB")
@@ -69,11 +65,12 @@ func GetShortUrl(hash string) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	var result model.ShortURL
-	err = shortUrls.FindOne(ctx, bson.D{{Key: "hash", Value: hash}}).Decode(&result)
+	result := new(model.ShortURL)
+	filter := bson.D{{Key: "hash", Value: hash}}
+	err = shortUrls.FindOne(ctx, filter).Decode(result)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
 
-	return result.URL, nil
+	return result, nil
 }
