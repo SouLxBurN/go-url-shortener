@@ -11,6 +11,7 @@ import (
 	"url-shortener/model"
 
 	"go.mongodb.org/mongo-driver/bson"
+	"go.mongodb.org/mongo-driver/mongo"
 )
 
 // CreateShortUrl
@@ -69,6 +70,10 @@ func GetShortUrl(hash string) (*model.ShortURL, error) {
 	filter := bson.D{{Key: "hash", Value: hash}}
 	err = shortUrls.FindOne(ctx, filter).Decode(result)
 	if err != nil {
+		// If not found, return no result and no error
+		if err == mongo.ErrNoDocuments {
+			return nil, nil
+		}
 		return nil, err
 	}
 

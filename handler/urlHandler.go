@@ -23,8 +23,6 @@ func CreateHandler(c *fiber.Ctx) error {
 	}
 
 	shortUrl := fmt.Sprintf("%s/%s", config.GetConfig().Domain, sURL.Hash)
-	// Also formulate a damn response
-	// Use domain config to return full url
 	return c.JSON(fiber.Map{
 		"shortUrl": shortUrl,
 	})
@@ -36,7 +34,11 @@ func ResolveHandler(c *fiber.Ctx) error {
 
 	shortURL, err := service.GetShortUrl(urlHash)
 	if err != nil {
+		fmt.Println(err)
 		return err
+	}
+	if shortURL == nil {
+		return fiber.NewError(404, "Short URL Not Found")
 	}
 
 	return c.Redirect(shortURL.URL)

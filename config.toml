@@ -1,6 +1,6 @@
 domain = "localhost:3000"
 
 [mongo]
-connectionString = "mongodb://localhost:27017"
+connectionString = "mongodb://soulxburn:password@localhost:27017"
 database = "urlShortener"
 collection = "shortUrls"
