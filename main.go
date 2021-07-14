@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"url-shortener/route"
 
 	"github.com/gofiber/fiber/v2"
@@ -9,5 +10,12 @@ import (
 func main() {
 	app := fiber.New()
 	route.Configure(app)
-	app.Listen(":3000")
+
+	var port string
+	if len(os.Args) > 1 {
+		port = os.Args[1]
+	} else {
+		port = ":3000"
+	}
+	app.Listen(port)
 }
